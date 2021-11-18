@@ -14,14 +14,20 @@ import org.springframework.web.client.RestTemplate;
 import java.util.HashMap;
 
 @RestController
-@RequestMapping("/api/gorest/user")
+@RequestMapping("/api/gorest/users")
 public class GoRestUserController {
     @Autowired
     private Environment env;
 
+    // This is the root route handler for all HTTP methods in the ReqeustMapping annotation for /api/gorest/users
+    @RequestMapping("/")
+    public String test() {
+        return "Default response for all HTTP methods for root of \"/api/gorest/users\"";
+    }
+
     @GetMapping("/pageone")
     public Object allUsers(RestTemplate restTemplate) {
-        return restTemplate.getForObject("https://gorest.co.in/public/v1/users/", GoRestResponse.class).getData();
+        return restTemplate.getForObject(env.getProperty("gorest.url"), GoRestResponse.class).getData();
 
     }
 
@@ -33,7 +39,6 @@ public class GoRestUserController {
             @RequestParam(name = "gender") String gender,
             @RequestParam(name = "status") String status) {
 
-        String url = "https://gorest.co.in/public/v1/users/";
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setBearerAuth(env.getProperty("gorest.token"));
@@ -41,7 +46,7 @@ public class GoRestUserController {
             GoRestUser newUser = new GoRestUser(name, email, gender, status);
             HttpEntity request = new HttpEntity(newUser, headers);
 
-            return restTemplate.exchange(url, HttpMethod.POST, request, GoRestResponse.class);
+            return restTemplate.exchange(env.getProperty("gorest.url"), HttpMethod.POST, request, GoRestResponse.class);
         } catch (Exception exc) {
             System.out.println(exc.getClass());
             System.out.println(exc.getMessage());
@@ -51,9 +56,9 @@ public class GoRestUserController {
 
     @GetMapping("/get")
     public Object getUser(RestTemplate restTemplate, @RequestParam(name = "id") String id) {
-        String url = "https://gorest.co.in/public/v1/users/" + id;
+
         try {
-            return restTemplate.getForObject(url, GoRestResponse.class).getData();
+            return restTemplate.getForObject(env.getProperty("gorest.url") + id, GoRestResponse.class).getData();
         } catch (HttpClientErrorException.NotFound exc) {
             return "ID did not a match a user in the database";
         } catch (Exception exc) {
@@ -68,14 +73,14 @@ public class GoRestUserController {
     public String deleteUser(
             RestTemplate restTemplate,
             @RequestParam(name = "id") String id) {
-        String url = "https://gorest.co.in/public/v1/users/" + id;
+
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setBearerAuth(env.getProperty("gorest.token"));
 
             HttpEntity request = new HttpEntity(headers);
 
-            restTemplate.exchange(url, HttpMethod.DELETE, request, GoRestResponse.class);
+            restTemplate.exchange((env.getProperty("gorest.url")+ id), HttpMethod.DELETE, request, GoRestResponse.class);
             return "Successfully deleted user " + id;
         } catch (HttpClientErrorException.Unauthorized exc) {
             return "You need to have authorization";
@@ -110,8 +115,5 @@ public class GoRestUserController {
     }
 
 
-    @RequestMapping("/secondtest")
-    public String test() {
-        return "Works for all CRUD actions";
-    }
+
 }
