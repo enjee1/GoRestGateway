@@ -7,12 +7,22 @@ public class GoRestUser {
     private String email;
     private String gender;
     private String status;
+    private String id;
+
 
     public GoRestUser(String name, String email, String gender, String status) {
         this.name = name;
         this.email = email;
         this.gender = gender;
         this.status = status;
+    }
+
+    public GoRestUser(String name, String email, String gender, String status, String id) {
+        this.name = name;
+        this.email = email;
+        this.gender = gender;
+        this.status = status;
+        this.id = id;
     }
 
     public String getName() {
@@ -45,5 +55,13 @@ public class GoRestUser {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 }

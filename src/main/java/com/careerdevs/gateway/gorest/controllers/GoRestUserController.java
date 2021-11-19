@@ -31,6 +31,21 @@ public class GoRestUserController {
 
     }
 
+    @GetMapping("/get")
+    public Object getUser(RestTemplate restTemplate, @RequestParam(name = "id") String id) {
+
+        try {
+            return restTemplate.getForObject(env.getProperty("gorest.url") + id, GoRestResponse.class).getData();
+        } catch (HttpClientErrorException.NotFound exc) {
+            return "ID did not a match a user in the database";
+        } catch (Exception exc) {
+            System.out.println(exc.getMessage());
+            return exc.getMessage();
+        }
+
+
+    }
+
     @PostMapping("/post")
     public Object postUser(
             RestTemplate restTemplate,
@@ -54,11 +69,24 @@ public class GoRestUserController {
         }
     }
 
-    @GetMapping("/get")
-    public Object getUser(RestTemplate restTemplate, @RequestParam(name = "id") String id) {
+    @PutMapping("/put")
+    public String putUser(RestTemplate restTemplate,
+                          @RequestParam(name = "name") String name,
+                          @RequestParam(name = "email") String email,
+                          @RequestParam(name = "gender") String gender,
+                          @RequestParam(name = "status") String status,
+                          @RequestParam(name = "id") String id) {
 
         try {
-            return restTemplate.getForObject(env.getProperty("gorest.url") + id, GoRestResponse.class).getData();
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(env.getProperty("gorest.token"));
+
+            GoRestUser user = new GoRestUser(name, email, gender, status, id);
+            HttpEntity request = new HttpEntity(user, headers);
+
+            restTemplate.exchange(env.getProperty("gorest.url") + id, HttpMethod.PUT, request, GoRestResponse.class);
+            return "Entry for " + user.getName() + " updated successfully.";
+
         } catch (HttpClientErrorException.NotFound exc) {
             return "ID did not a match a user in the database";
         } catch (Exception exc) {
