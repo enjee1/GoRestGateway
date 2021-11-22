@@ -1,11 +1,11 @@
 package com.careerdevs.gateway.gorest.models;
 
-public class GoRestResponse {
+public class GoRestResponseMulti {
 
     private GoRestMeta meta;
-    private Object data;
+    private GoRestUser[] data;
 
-    public Object getMeta() {
+    public GoRestMeta getMeta() {
         return meta;
     }
 
@@ -13,11 +13,11 @@ public class GoRestResponse {
         this.meta = meta;
     }
 
-    public Object getData() {
+    public GoRestUser[] getData() {
         return data;
     }
 
-    public void setData(Object data) {
+    public void setData(GoRestUser[] data) {
         this.data = data;
     }
 }
