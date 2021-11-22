@@ -17,12 +17,8 @@ public class GoRestUser {
         this.status = status;
     }
 
-    public GoRestUser(String name, String email, String gender, String status, String id) {
-        this.name = name;
-        this.email = email;
-        this.gender = gender;
-        this.status = status;
-        this.id = id;
+    public GoRestUser() {
+
     }
 
     public String getName() {

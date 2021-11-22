@@ -11,7 +11,7 @@ public class GoRestMeta {
         this.pagination = pagination;
     }
 
-    private static class Pagination {
+    public static class Pagination {
         private int pages;
         private Links links;
 
@@ -31,7 +31,7 @@ public class GoRestMeta {
             this.pages = pages;
         }
 
-        private static class Links {
+        public static class Links {
             private String next;
 
             public String getNext() {
