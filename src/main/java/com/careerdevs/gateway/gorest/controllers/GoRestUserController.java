@@ -88,7 +88,7 @@ public class GoRestUserController {
     }
 
     @PutMapping("/put")
-    public String putUser(RestTemplate restTemplate,
+    public Object putUser(RestTemplate restTemplate,
                           @RequestParam(name = "name") String name,
                           @RequestParam(name = "email") String email,
                           @RequestParam(name = "gender") String gender,
@@ -99,19 +99,20 @@ public class GoRestUserController {
             HttpHeaders headers = new HttpHeaders();
             headers.setBearerAuth(env.getProperty("gorest.token"));
 
+//            GoRestUser user = restTemplate.getForObject(env.getProperty("gorest.url") + "/users/" + id, GoRestResponse.class).getData();
             GoRestUser user = new GoRestUser(name, email, gender, status);
+
             HttpEntity request = new HttpEntity(user, headers);
 
-            restTemplate.exchange(env.getProperty("gorest.url") + "/users/" + id, HttpMethod.PUT, request, GoRestResponse.class);
-            return "Entry for " + user.getName() + " updated successfully.";
+            System.out.println("Entry for " + id + " updated successfully.");
+            return restTemplate.exchange(env.getProperty("gorest.url") + "/users/" + id, HttpMethod.PUT, request, GoRestResponse.class);
+
 
         } catch (HttpClientErrorException.NotFound exc) {
             return "ID did not a match a user in the database";
         } catch (Exception exc) {
-            System.out.println(exc.getMessage());
             return exc.getMessage();
         }
-
 
     }
 
@@ -139,6 +140,28 @@ public class GoRestUserController {
     }
 
 
+    @DeleteMapping("/deletealt/{id}")
+    public String deleteUserAlt(
+            RestTemplate restTemplate,
+            @PathVariable(name = "id") String userID) {
+
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(env.getProperty("gorest.token"));
+
+            HttpEntity request = new HttpEntity(headers);
+
+            restTemplate.exchange((env.getProperty("gorest.url") + "/users/" + userID), HttpMethod.DELETE, request, GoRestResponse.class);
+            return "Successfully deleted user " + userID;
+        } catch (HttpClientErrorException.Unauthorized exc) {
+            return "You need to have authorization";
+        } catch (HttpClientErrorException.NotFound exc) {
+            return "ID did not a match a user in the database";
+        } catch (Exception exc) {
+            System.out.println(exc.getMessage());
+            return exc.getMessage();
+        }
+    }
 
     @GetMapping("/test")
     public String testGetRoute() {
