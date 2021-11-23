@@ -1,7 +1,9 @@
 package com.careerdevs.gateway.gorest.models;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.web.bind.annotation.RequestParam;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class GoRestUser {
     private String name;
     private String email;
