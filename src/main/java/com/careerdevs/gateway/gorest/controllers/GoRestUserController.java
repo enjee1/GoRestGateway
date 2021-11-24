@@ -20,11 +20,12 @@ import java.util.Collections;
 public class GoRestUserController {
     @Autowired
     private Environment env;
+    private final static String GRURL = "https://gorest.co.in/public/v1";
 
     /*
-    TODO: Make GoRest URL a constant instead of environment variable.
+    TODO: (DONE 11/23/2021) Make GoRest URL a constant instead of environment variable.
     TODO: Make v2 and v3 of ("/put")
-    TODO: Make most advanced version's of put, post, and delete (video from 11/22/2021)
+    TODO: Make most advanced versions of put, post, and delete (video from 11/22/2021)
     */
 
     // This is the root route handler for all HTTP methods in the RequestMapping annotation for /api/gorest/users
@@ -35,7 +36,7 @@ public class GoRestUserController {
 
     @GetMapping("/pageone")
     public GoRestResponseMulti pageOne(RestTemplate restTemplate) {
-        return restTemplate.getForObject(env.getProperty("gorest.url") + "/users/", GoRestResponseMulti.class);
+        return restTemplate.getForObject(GRURL + "/users/", GoRestResponseMulti.class);
 
     }
 
@@ -47,8 +48,9 @@ public class GoRestUserController {
         ArrayList<GoRestUser> allUsers = new ArrayList<>();
         Collections.addAll(allUsers, res.getData());
 
+        String tempURL = GRURL + "/users?page=";
+        // loop starts at 2 since pageOne() was called prior to iterating
         for (int i = 2; i <= pageLimit; i++) {
-            String tempURL = env.getProperty("gorest.url") + "/users/?page=";
             GoRestResponseMulti tempRes = restTemplate.getForObject(tempURL + i, GoRestResponseMulti.class);
             Collections.addAll(allUsers, tempRes.getData());
         }
@@ -56,13 +58,40 @@ public class GoRestUserController {
         return allUsers;
     }
 
+    @GetMapping("/firstthreepages")
+    public Object someUsers(RestTemplate restTemplate) {
+
+        ArrayList<GoRestUser> someUsers = new ArrayList<>();
+
+        String tempURL = GRURL + "/users?page=";
+        for (int i = 1; i <= 3; i++) {
+            GoRestResponseMulti tempRes = restTemplate.getForObject(tempURL + i, GoRestResponseMulti.class);
+            Collections.addAll(someUsers, tempRes.getData());
+        }
+
+        return someUsers;
+    }
+
     @GetMapping("/page/{page}")
     public Object usersByPage(RestTemplate restTemplate,
                               @PathVariable(name = "page") String pageNum) {
-        String tempURL = env.getProperty("gorest.url") + "/users/?page=";
+        GoRestResponseMulti res = pageOne(restTemplate);
+        int pageLimit = res.getMeta().getPagination().getPages();
+        String errorMsg = "Please enter a number greater than 0 and less than " + pageLimit + ".";
+        GoRestUser[] users = null;
+        String tempURL = GRURL + "/users?page=";
 
-        GoRestUser[] users = restTemplate.getForObject(tempURL + pageNum, GoRestResponseMulti.class).getData();
-
+        try {
+            if (Integer.parseInt(pageNum) > 0 && Integer.parseInt(pageNum) < pageLimit ) {
+                users = restTemplate.getForObject(tempURL + pageNum, GoRestResponseMulti.class).getData();
+            } else {
+                return errorMsg;
+            }
+        } catch (NumberFormatException exc) {
+            return errorMsg;
+        } catch (Exception exc) {
+            return errorMsg;
+        }
         return users;
     }
 
@@ -72,7 +101,7 @@ public class GoRestUserController {
              @RequestParam(name = "id") String id) {
 
         try {
-            return restTemplate.getForObject(env.getProperty("gorest.url") + "/users/" + id, GoRestResponse.class).getData();
+            return restTemplate.getForObject(GRURL + "/users/" + id, GoRestResponse.class).getData();
         } catch (HttpClientErrorException.NotFound exc) {
             return "ID did not a match a user in the database";
         } catch (Exception exc) {
@@ -97,7 +126,7 @@ public class GoRestUserController {
             GoRestUser newUser = new GoRestUser(name, email, gender, status);
             HttpEntity request = new HttpEntity(newUser, headers);
 
-            return restTemplate.exchange(env.getProperty("gorest.url") + "/users/", HttpMethod.POST, request, GoRestResponse.class);
+            return restTemplate.exchange(GRURL + "/users/", HttpMethod.POST, request, GoRestResponse.class);
         } catch (Exception exc) {
             System.out.println(exc.getClass());
             System.out.println(exc.getMessage());
@@ -119,7 +148,7 @@ public class GoRestUserController {
 
             HttpEntity<GoRestUser> request = new HttpEntity(user, headers);
 
-            return restTemplate.exchange(env.getProperty("gorest.url") + "/users/", HttpMethod.POST, request, GoRestResponse.class);
+            return restTemplate.exchange(GRURL + "/users/", HttpMethod.POST, request, GoRestResponse.class);
         } catch (Exception exc) {
             System.out.println(exc.getClass());
             System.out.println(exc.getMessage());
@@ -144,7 +173,7 @@ public class GoRestUserController {
             HttpEntity<GoRestUser> request = new HttpEntity(user, headers);
 
             System.out.println("Entry for " + id + " updated successfully.");
-            return restTemplate.exchange(env.getProperty("gorest.url") + "/users/" + id, HttpMethod.PUT, request, GoRestResponse.class);
+            return restTemplate.exchange(GRURL + "/users/" + id, HttpMethod.PUT, request, GoRestResponse.class);
 
 
         } catch (HttpClientErrorException.NotFound exc) {
@@ -167,7 +196,7 @@ public class GoRestUserController {
 
             HttpEntity request = new HttpEntity(headers);
 
-            restTemplate.exchange((env.getProperty("gorest.url") + "/users/" + id), HttpMethod.DELETE, request, GoRestResponse.class);
+            restTemplate.exchange((GRURL + "/users/" + id), HttpMethod.DELETE, request, GoRestResponse.class);
             return "Successfully deleted user " + id;
         } catch (HttpClientErrorException.Unauthorized exc) {
             return "You need to have authorization";
@@ -191,7 +220,7 @@ public class GoRestUserController {
 
             HttpEntity request = new HttpEntity(headers);
 
-            restTemplate.exchange((env.getProperty("gorest.url") + "/users/" + userID), HttpMethod.DELETE, request, GoRestResponse.class);
+            restTemplate.exchange((GRURL + "/users/" + userID), HttpMethod.DELETE, request, GoRestResponse.class);
             return "Successfully deleted user " + userID;
         } catch (HttpClientErrorException.Unauthorized exc) {
             return "You need to have authorization";
