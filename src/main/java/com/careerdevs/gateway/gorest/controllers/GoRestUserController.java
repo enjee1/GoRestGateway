@@ -24,8 +24,8 @@ public class GoRestUserController {
 
     /*
     TODO: (DONE 11/23/2021) Make GoRest URL a constant instead of environment variable.
-    TODO: Make v2 and v3 of ("/put")
-    TODO: Make most advanced versions of put, post, and delete (video from 11/22/2021)
+    TODO: (DONE 11/26/2021) Make v2 and v3 of ("/put")
+    TODO: (DONE 11/26/2021)Make most advanced versions of put, post, and delete (video from 11/22/2021)
     */
 
     // This is the root route handler for all HTTP methods in the RequestMapping annotation for /api/gorest/users
@@ -140,9 +140,15 @@ public class GoRestUserController {
             @RequestBody GoRestUser user) {
 
         try {
+            //The below two if blocks need to be combined to improve user experience.
             if (!user.getGender().equals("male") && !user.getGender().equals("female")) {
-                return "Gender must be entered as male or female";
+                return "Gender must be entered as male or female.";
             }
+
+            if (!user.getStatus().equals("active") && !user.getStatus().equals("inactive")) {
+                return "Gender must be entered as active or inactive.";
+            }
+
             HttpHeaders headers = new HttpHeaders();
             headers.setBearerAuth(env.getProperty("gorest.token"));
 
@@ -172,7 +178,6 @@ public class GoRestUserController {
 
             HttpEntity<GoRestUser> request = new HttpEntity(user, headers);
 
-            System.out.println("Entry for " + id + " updated successfully.");
             return restTemplate.exchange(GRURL + "/users/" + id, HttpMethod.PUT, request, GoRestResponse.class);
 
 
@@ -185,10 +190,60 @@ public class GoRestUserController {
     }
 
 
+    @PutMapping("/putalt/{id}")
+    public Object putUserAlt(RestTemplate restTemplate,
+                             @PathVariable(name = "id") String id,
+                             @RequestParam(name = "name", required = false) String name,
+                             @RequestParam(name = "email", required = false) String email,
+                             @RequestParam(name = "gender", required = false) String gender,
+                             @RequestParam(name = "status", required = false) String status
+                             ) {
+
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(env.getProperty("gorest.token"));
+
+            GoRestUser user = new GoRestUser(name, email, gender, status);
+
+            HttpEntity<GoRestUser> request = new HttpEntity(user, headers);
+
+            return restTemplate.exchange(GRURL + "/users/" + id, HttpMethod.PUT, request, GoRestResponse.class);
+
+
+        } catch (HttpClientErrorException.NotFound exc) {
+            return "ID did not a match a user in the database";
+        } catch (Exception exc) {
+            return exc.getMessage();
+        }
+
+    }
+
+    @PutMapping("/putalt2/{id}")
+    public Object putUserAlt2(RestTemplate restTemplate,
+                             @PathVariable(name = "id") String id,
+                             @RequestBody GoRestUser user) {
+
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(env.getProperty("gorest.token"));
+
+            HttpEntity<GoRestUser> request = new HttpEntity(user, headers);
+
+            return restTemplate.exchange(GRURL + "/users/" + id, HttpMethod.PUT, request, GoRestResponse.class);
+
+
+        } catch (HttpClientErrorException.NotFound exc) {
+            return "ID did not a match a user in the database";
+        } catch (Exception exc) {
+            return exc.getMessage();
+        }
+
+    }
     @DeleteMapping("/delete")
     public String deleteUser(
             RestTemplate restTemplate,
             @RequestParam(name = "id") String id) {
+        String tempURL = GRURL + "/users/" + id;
 
         try {
             HttpHeaders headers = new HttpHeaders();
@@ -196,7 +251,7 @@ public class GoRestUserController {
 
             HttpEntity request = new HttpEntity(headers);
 
-            restTemplate.exchange((GRURL + "/users/" + id), HttpMethod.DELETE, request, GoRestResponse.class);
+            restTemplate.exchange(tempURL, HttpMethod.DELETE, request, GoRestResponse.class);
             return "Successfully deleted user " + id;
         } catch (HttpClientErrorException.Unauthorized exc) {
             return "You need to have authorization";
@@ -214,13 +269,15 @@ public class GoRestUserController {
             RestTemplate restTemplate,
             @PathVariable(name = "id") String userID) {
 
+        String tempURL = GRURL + "/users/" + userID;
+
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setBearerAuth(env.getProperty("gorest.token"));
 
             HttpEntity request = new HttpEntity(headers);
 
-            restTemplate.exchange((GRURL + "/users/" + userID), HttpMethod.DELETE, request, GoRestResponse.class);
+            restTemplate.exchange(tempURL, HttpMethod.DELETE, request, GoRestResponse.class);
             return "Successfully deleted user " + userID;
         } catch (HttpClientErrorException.Unauthorized exc) {
             return "You need to have authorization";
